@@ -64,7 +64,8 @@ def generate_key(name):
 def create_bitbucket_project(name):
     payload = {
         "name": name,
-        "key": generate_key(name)
+        "key": generate_key(name),
+        "is_private": True
     }
     url = os.path.join(BITBUCKET_ENDPOINT, "teams", BITBUCKET_TEAM, "projects/")
     res = bitbucket.post(url, json=payload)
@@ -73,7 +74,7 @@ def create_bitbucket_project(name):
 
 
 def create_bitbucket_repository(name, project):
-    payload = {"scm": "git", "project": {"key": generate_key(project), "is_private": True}}
+    payload = {"scm": "git", "is_private": True, "project": {"key": generate_key(project)}}
     url = os.path.join(BITBUCKET_ENDPOINT, "repositories", BITBUCKET_TEAM, name)
     res = bitbucket.post(url, json=payload)
     if not 200 <= res.status_code < 300:
