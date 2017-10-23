@@ -15,6 +15,7 @@ BITBUCKET_USERNAME = os.environ["BITBUCKET_USERNAME"]
 BITBUCKET_PASSWORD = os.environ["BITBUCKET_PASSWORD"]
 
 
+
 bitbucket = requests.Session()
 bitbucket.auth = (BITBUCKET_USERNAME, BITBUCKET_PASSWORD)
 
@@ -74,11 +75,12 @@ def create_bitbucket_project(name):
 
 
 def create_bitbucket_repository(name, project):
-    payload = {"scm": "git", "is_private": True, "project": {"key": generate_key(project)}}
+    payload = {"scm": "git", "is_private": True, "project": {"key": generate_key(project).lower()}}
     url = os.path.join(BITBUCKET_ENDPOINT, "repositories", BITBUCKET_TEAM, name)
     res = bitbucket.post(url, json=payload)
     if not 200 <= res.status_code < 300:
-        raise ValueError("could not create repository {0}: {1}".format(name, res.text))
+        if not "Repository with this Slug and Owner already exists." in res.text:
+            raise ValueError("could not create repository {0}: {1}".format(name, res.text))
 
 
 def clone_repository(repository):
@@ -86,15 +88,15 @@ def clone_repository(repository):
     if os.path.exists(project_dir) and os.listdir(project_dir):
         return False
     os.makedirs(project_dir, exist_ok=True)
-    subprocess.run(["git", "clone", repository["ssh_url_to_repo"], project_dir])
+    subprocess.run(["git", "clone", "--mirror", repository["ssh_url_to_repo"], project_dir])
     return project_dir
 
 def upload_repository(name, project):
     project_dir = os.path.join("/tmp", project, name)
     remote = "git@bitbucket.org:{0}/{1}.git".format(BITBUCKET_TEAM, name)
     subprocess.run(["git", "remote", "add", "bitbucket", remote], cwd=project_dir)
-    subprocess.run(["git", "push", "bitbucket", "master"], cwd=project_dir)
-
+    subprocess.run(["git", "push", "--all", "bitbucket"], cwd=project_dir)
+    subprocess.run(["git", "push", "--tags", "bitbucket"], cwd=project_dir)
 
 class Migrator:
     def __init__(self):
