@@ -75,7 +75,7 @@ def create_bitbucket_project(name):
 
 
 def create_bitbucket_repository(name, project):
-    payload = {"scm": "git", "is_private": True, "project": {"key": generate_key(project).lower()}}
+    payload = {"scm": "git", "is_private": True, "project": {"key": generate_key(project)}}
     url = os.path.join(BITBUCKET_ENDPOINT, "repositories", BITBUCKET_TEAM, name)
     res = bitbucket.post(url, json=payload)
     if not 200 <= res.status_code < 300:
@@ -84,7 +84,7 @@ def create_bitbucket_repository(name, project):
 
 
 def clone_repository(repository):
-    project_dir = os.path.join("/tmp", repository["namespace"]["name"], repository["name"])
+    project_dir = os.path.join("/tmp", repository["namespace"]["name"], repository["path"])
     if os.path.exists(project_dir) and os.listdir(project_dir):
         return False
     os.makedirs(project_dir, exist_ok=True)
@@ -118,8 +118,8 @@ class Migrator:
         project_dir = clone_repository(repository)
         if not project_dir:
             return
-        create_bitbucket_repository(repository["name"], project)
-        upload_repository(repository["name"], project)
+        create_bitbucket_repository(repository["path"], project)
+        upload_repository(repository["path"], project)
 
 
 def main():
