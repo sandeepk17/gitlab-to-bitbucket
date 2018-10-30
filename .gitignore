@@ -1,0 +1,3 @@
+config.yml
+*.pyc
+gl_to_bb_migration_report_*

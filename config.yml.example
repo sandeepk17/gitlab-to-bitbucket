@@ -1,0 +1,7 @@
+GITLAB_ENDPOINT: "http://gitlab.com/api/v3"
+GITLAB_TOKEN: "jsAeerPBBPPas6NjQ23fH"
+
+BITBUCKET_ENDPOINT: "https://api.bitbucket.org/2.0"
+BITBUCKET_TEAM: "marsmission"
+BITBUCKET_USERNAME: "jonsnow"
+BITBUCKET_PASSWORD: "myPassw0rd"
