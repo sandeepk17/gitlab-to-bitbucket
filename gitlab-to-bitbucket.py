@@ -203,6 +203,44 @@ def main():
     migrator.migrate_repositories()
     del migrator
 
+def update_access_to_gl_repos(access_level):
+    update_repo_level_access(access_level)
+    update_group_level_access(access_level)
+
+def update_repo_level_access(access_level):
+    params = {"private_token": GITLAB_TOKEN, "per_page": 100}
+    gl_repos = list_gitlab_repositories()
+    print("Gitlab Repositories: {}".format(gl_repos))
+    for repo in gl_repos:
+        print("Changing permissions for repo: {}".format(repo.get("path_with_namespace")))
+        repo_id = repo.get("id")
+        members_url = os.path.join(GITLAB_ENDPOINT, "projects", str(repo_id), "members")
+        mres = requests.get(members_url, params = params)
+        members = mres.json()
+        print("Current members: {}".format(members))
+        for member in members:
+            member_id = member.get("id")
+            member_update_url = os.path.join(GITLAB_ENDPOINT, "projects", str(repo_id), "members", str(member_id))
+            r = requests.put(member_update_url, params = {"access_level": access_level}, headers = {"PRIVATE-TOKEN": GITLAB_TOKEN})
+            print("HTTP Status: {}".format(r.status_code))
+
+def update_group_level_access(access_level):
+    params = {"private_token": GITLAB_TOKEN, "per_page": 100}
+    gurl = os.path.join(GITLAB_ENDPOINT, "groups")
+    gl_groups = requests.get(gurl, params = params).json()
+    print("Groups: {}".format(gl_groups))
+    for g in gl_groups:
+        gid = g.get("id")
+        murl = os.path.join(gurl, str(gid), "members")
+        members = requests.get(murl, params = params).json()
+        print("Current Members of the group {}: {}".format(g.get("name"), members))
+        for member in members:
+            mid = member.get("id")
+            url = os.path.join(murl, str(mid))
+            r = requests.put(url, params = {"access_level": access_level}, headers = {"PRIVATE-TOKEN": GITLAB_TOKEN})
+            print("HTTP Status: {}".format(r.status_code))
+
 if __name__ == '__main__':
+    #update_access_to_gl_repos(20)
     main()
 
